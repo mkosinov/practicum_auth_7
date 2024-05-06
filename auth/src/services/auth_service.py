@@ -5,6 +5,7 @@ from functools import lru_cache
 from typing import Annotated
 from uuid import UUID
 
+import httpx
 from argon2.exceptions import VerifyMismatchError
 from core.config import get_settings
 from core.exceptions import (
@@ -16,7 +17,7 @@ from core.exceptions import (
 )
 from db.postgres.postgres import PostgresStorage, get_postgers_storage
 from db.redis.redis_storage import get_redis_storage
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from models.device import DeviceModel
 from models.role import Role
 from models.token import RefreshToken
@@ -316,6 +317,60 @@ class AuthService:
             table=self.user_history_table,
         )
         return result
+
+    async def oauth_login(
+        self,
+        session: AsyncSession,
+        code: str,
+        code_verifier: str,
+        user_agent: str,
+        ip: str,
+    ):
+        tokens = await self._make_token_request(
+            code=code, code_verifier=code_verifier
+        )
+        user_info = await self._get_user_info(
+            access_token=tokens["access_token"]
+        )
+        stmt = select(User).where(User.email == user_info["default_email"])
+        user = await session.scalar(stmt)
+        if not user:
+            print("creating user")
+        return user_info
+
+    async def _make_token_request(self, code: str, code_verifier: str):
+        headers = {
+            "Content-type": "application/x-www-form-urlencoded",
+            "Authorization": f"Basic {get_settings().OAUTH_YANDEX_BASIC_BASE64}",
+        }
+        data = {
+            "grant_type": "authorization_code",
+            "code": code,
+            "code_verifier": code_verifier,
+        }
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                url="https://oauth.yandex.ru/token",
+                headers=headers,
+                data=data,
+            )
+        if response.status_code != 200:
+            raise HTTPException(
+                status_code=response.status_code, detail=response.json()
+            )
+        return response.json()
+
+    async def _get_user_info(self, access_token):
+        headers = {"Authorization": f"OAuth {access_token}"}
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                url="https://login.yandex.ru/info?", headers=headers
+            )
+        if response.status_code != 200:
+            raise HTTPException(
+                status_code=response.status_code, detail=response.json()
+            )
+        return response.json()
 
 
 @lru_cache()

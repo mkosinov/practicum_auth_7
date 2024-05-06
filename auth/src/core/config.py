@@ -48,6 +48,11 @@ class Settings(BaseSettings):
     # Acess token lifetime in days
     REFRESH_TOKEN_LIFETIME: int = Field(default=14)
 
+    # OAuth2.0
+    OAUTH_YANDEX_CLIENT_ID: str = Field()
+    OAUTH_YANDEX_CLIENT_SECRET: str = Field()
+    OAUTH_YANDEX_BASIC_BASE64: str = Field()
+
     # Validation config
     ROLE_TITLE_MIN_LENGTH: int = 3
     ROLE_TITLE_MAX_LENGTH: int = 50

@@ -1,7 +1,7 @@
 import contextlib
 
 import uvicorn
-from api.v1 import access, auth, personal, roles
+from api.v1 import access, auth, oauth, personal, roles
 from core.config import get_settings
 from db.prepare_db import redis_shutdown, redis_startup
 from fastapi import FastAPI
@@ -29,6 +29,11 @@ app.include_router(
     auth.router,
     prefix=get_settings().URL_PREFIX + "/auth",
     tags=["Authentication service."],
+)
+app.include_router(
+    oauth.router,
+    prefix=get_settings().URL_PREFIX + "/oauth",
+    tags=["OAuth2.0 service."],
 )
 app.include_router(
     personal.router,
