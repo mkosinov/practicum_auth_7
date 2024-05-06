@@ -1,0 +1,92 @@
+name: auth
+
+services:
+  auth.db:
+    container_name: auth.postgres
+    image: postgres:16.0-alpine3.18
+    env_file:
+      - .env
+    expose:
+      - $PG_PORT
+    volumes:
+      - postgres_auth_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -p $PG_PORT -U $PG_USER -d $PG_DB"]
+      interval: 10s
+      timeout: 1s
+      retries: 10
+      start_period: 5s
+    restart: always
+    networks:
+      movies_project_net:
+    command: -p $PG_PORT
+
+  auth.cache:
+    container_name: auth.redis
+    image: redis:7.2.3-alpine3.19
+    expose:
+      -  $AUTH_REDIS_PORT
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli", "-p $AUTH_REDIS_PORT", "ping"]
+      interval: 10s
+      timeout: 1s
+      retries: 5
+      start_period: 5s
+    volumes:
+      - redis_auth_data:/data
+    restart: always
+    networks:
+      movies_project_net:
+    command: redis-server --port $AUTH_REDIS_PORT --save 60 1 --loglevel notice
+
+  auth.app:
+    container_name: auth.fastapi
+    build:
+      context: ./src
+    env_file:
+      - .env
+    expose:
+      - $AUTH_FASTAPI_PORT
+    volumes:
+      - fastapi_auth_log:/src/logs
+    healthcheck:
+      test: curl -s -f http://localhost:$AUTH_FASTAPI_PORT/auth/docs || exit 1
+      interval: 10s
+      timeout: 1s
+      retries: 10
+      start_period: 5s      
+    restart: always
+    depends_on:
+      auth.db:
+        condition: service_healthy
+      auth.cache:
+        condition: service_healthy
+    networks:
+      movies_project_net:     
+    command: bash -c "poetry run alembic upgrade head && gunicorn -w 4 -k uvicorn.workers.UvicornWorker -b :$AUTH_FASTAPI_PORT main:app"
+
+  auth.proxy:
+    container_name: auth.nginx
+    image: nginx:1.25.5-bookworm
+    ports:
+      - 8001:80
+    volumes:
+      - nginx_auth_log:/var/log/nginx
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      auth.app:
+        condition: service_healthy
+    restart: always
+    networks:
+      movies_project_net:
+
+
+volumes:
+  postgres_auth_data:
+  redis_auth_data:
+  fastapi_auth_log:
+  nginx_auth_log:
+
+networks:
+  movies_project_net:

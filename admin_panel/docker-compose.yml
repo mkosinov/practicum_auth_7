@@ -1,0 +1,74 @@
+name: admin_panel
+
+services:
+
+  admin.db:
+    container_name: admin_panel.db
+    image: postgres:16.0-alpine3.18
+    env_file:
+      - .env   
+    expose:
+      - $POSTGRES_PORT
+    volumes:
+      - postgres_movies_data:/var/lib/postgresql/data     
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+      interval: 10s
+      timeout: 1s
+      retries: 10
+      start_period: 5s
+    restart: always
+    networks:
+      movies_project_net:    
+  
+  admin.app:
+    container_name: admin_panel.app
+    build:
+      context: ./app
+    image: uwsgi-django-img
+    expose:
+      - $APP_PORT
+    env_file: 
+      - .env
+    volumes:
+      - admin_panel_app_static:/var/www/static
+      - admin_panel_app_media:/var/www/media
+    healthcheck:
+      test: curl -s -f http://localhost:$APP_PORT/admin || exit 1
+      interval: 10s
+      timeout: 1s
+      retries: 10
+      start_period: 5s      
+    depends_on:
+      admin.db:
+        condition: service_healthy         
+    restart: always
+    networks:
+      movies_project_net:    
+
+
+  admin.proxy:
+    container_name: admin_panel.proxy
+    image: nginx:1.25-bookworm
+    volumes:
+      - admin_panel_app_static:/var/www/static:ro
+      - admin_panel_app_media:/var/www/media:rw
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - 8002:80
+    depends_on:
+      admin.app:
+        condition: service_healthy      
+    restart: always
+    networks:
+      movies_project_net:    
+
+
+volumes:
+  postgres_movies_data:
+  admin_panel_app_static:
+  admin_panel_app_media:
+
+networks:
+  movies_project_net:
