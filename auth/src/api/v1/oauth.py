@@ -8,7 +8,7 @@ from typing import Annotated
 from core.config import get_settings
 from db.postgres.session_handler import session_handler
 from db.redis.redis_storage import RedisStorage, get_redis_storage
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from fastapi.responses import JSONResponse, RedirectResponse
 from services.auth_service import AuthService, get_auth_service
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -121,7 +121,14 @@ async def oauth_yandex_code(
 
 
 @router.get("/vk")
-async def oauth_vk_request():
+async def oauth_vk_page():
+    appId = "51918377"
+    redirect_vk_url = "http://localhost/api/v1/oauth/vk/code"
+    oauth_vk_url = f"https://oauth.vk.com/authorize?client_id={appId}&display=page&redirect_uri={redirect_vk_url}&response_type=code&v=5.131"
+    return RedirectResponse(oauth_vk_url, status_code=307)
+
+
+"""
     redirect_state = "sidhgw"
     appId = "51918377"
     redirect_vk_url = "http://localhost/api/v1/oauth/vk/token"
@@ -131,12 +138,11 @@ async def oauth_vk_request():
 
 
 "https://id.vk.com/auth?uuid=2bca55c9-ef38-451f-bf0c-94ea999ed97f&appId=51918377&response_type=silent_token&redirect_uri=http://localhost/api/v1/oauth/vk/token&redirect_state=sidhgw"
+"""
 
 
-@router.get("/vk/token")
-async def oauth_vk_token(request: Request):
-    print("headers:")
-    print(request.headers)
-    print("body:")
-    print(await request.body())
-    return JSONResponse({"status": "ok", "response": await request.json()})
+@router.get("/vk/code")
+async def oauth_vk_silent_token(code: Annotated[str, Query()]):
+    print("code:")
+    print(code)
+    return JSONResponse({"status": "ok", "code": code})

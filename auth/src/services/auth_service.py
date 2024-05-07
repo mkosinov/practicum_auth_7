@@ -332,16 +332,16 @@ class AuthService:
         user_info = await self._get_user_info(
             access_token=tokens["access_token"]
         )
-        stmt = select(User).where(User.email == user_info["default_email"])
-        user = await session.scalar(stmt)
-        if not user:
-            print("creating user")
+        # stmt = select(User).where(User.email == user_info["default_email"])
+        # user = await session.scalar(stmt)
+        # if not user:
+        #     print("creating user")
         return user_info
 
     async def _make_token_request(self, code: str, code_verifier: str):
         headers = {
             "Content-type": "application/x-www-form-urlencoded",
-            "Authorization": f"Basic {get_settings().OAUTH_YANDEX_BASIC_BASE64}",
+            "Authorization": f"Basic {get_settings().OAUTH_YANDEX_BASIC_BASE64.decode()}",
         }
         data = {
             "grant_type": "authorization_code",

@@ -1,3 +1,4 @@
+import base64
 import os
 from functools import lru_cache
 from typing import ClassVar
@@ -51,7 +52,6 @@ class Settings(BaseSettings):
     # OAuth2.0
     OAUTH_YANDEX_CLIENT_ID: str = Field()
     OAUTH_YANDEX_CLIENT_SECRET: str = Field()
-    OAUTH_YANDEX_BASIC_BASE64: str = Field()
 
     # Validation config
     ROLE_TITLE_MIN_LENGTH: int = 3
@@ -91,6 +91,12 @@ class Settings(BaseSettings):
     @property
     def postgres_dsn(self) -> str:
         return f"postgresql+asyncpg://{self.PG_USER}:{self.PG_PASSWORD}@{self.PG_HOST}:{self.PG_PORT}/{self.PG_DB}"
+
+    @property
+    def OAUTH_YANDEX_BASIC_BASE64(self) -> bytes:
+        return base64.standard_b64encode(
+            f"{self.OAUTH_YANDEX_CLIENT_ID}:{self.OAUTH_YANDEX_CLIENT_SECRET}".encode()
+        )
 
 
 @lru_cache

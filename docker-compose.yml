@@ -2,6 +2,6 @@ name: sprint7
 
 
 include:
-    # - ./admin_panel/docker-compose.yml
-    # - ./movies/docker-compose.yml
+    - ./admin_panel/docker-compose.yml
+    - ./movies/docker-compose.yml
     - ./auth/docker-compose.yml    
