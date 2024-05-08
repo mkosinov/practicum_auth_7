@@ -1,7 +1,7 @@
 from http import HTTPStatus
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, Path, Query
+from fastapi import APIRouter, Body, Depends, Path, Query, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.config import get_settings
@@ -24,6 +24,7 @@ async def assign_user_role(
     access: AccessInSchema = Body(
         description="Specify a user login and a role title to give role to the user"
     ),
+    request_id: Annotated[str, Header(alias="X-Request-Id")] = "",
 ) -> AccessDBSchema:
     """Assign a role to the user"""
     result = await access_service.create(session=session, access=access)
@@ -42,6 +43,7 @@ async def remove_user_role(
     access: AccessInSchema = Body(
         description="Specify user login and role title to remove role to user"
     ),
+    request_id: Annotated[str, Header(alias="X-Request-Id")] = "",
 ) -> AccessDBSchema:
     """Remove role to user"""
     result = await access_service.delete(session=session, access=access)
@@ -61,6 +63,7 @@ async def verify_user_has_role(
     role_title: Annotated[
         str, Query(pattern=get_settings().ROLE_TITLE_PATTERN)
     ],
+    request_id: Annotated[str, Header(alias="X-Request-Id")] = "",
 ) -> bool:
     """Verify user has role"""
     access = AccessInSchema(user_login=user_login, role_title=role_title)
@@ -78,6 +81,7 @@ async def list_user_roles(
     session: Annotated[AsyncSession, Depends(session_handler.create_session)],
     access_service: Annotated[AccessService, Depends(get_access_service)],
     user_login: Annotated[str, Path(pattern=get_settings().LOGIN_PATTERN)],
+    request_id: Annotated[str, Header(alias="X-Request-Id")] = "",
 ) -> ShowUserAccessSchema:
     """Get all user roles"""
     result = await access_service.get_user_roles(

@@ -39,6 +39,10 @@ class Settings(BaseSettings):
     AUTH_FASTAPI_HOST: str = Field(default="auth.app")
     AUTH_FASTAPI_PORT: int = Field(default="8000")
 
+    # FastAPI
+    JAEGER_HOST: str = Field(default="auth.jaeger")
+    JAEGER_PORT: int = Field(default="6831")
+
     # JWT
     REFRESH_TOKEN_MAX_LENGTH: int = 300
     JWT_SECRET: str = Field(default="Secret encode token")

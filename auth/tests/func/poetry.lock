@@ -332,7 +332,6 @@ dev = ["pre-commit", "tox"]
 testing = ["pytest", "pytest-benchmark"]
 
 [[package]]
-<<<<<<< HEAD
 name = "pycryptodomex"
 version = "3.20.0"
 description = "Cryptographic library for Python"
@@ -374,8 +373,6 @@ files = [
 ]
 
 [[package]]
-=======
->>>>>>> tests/roles
 name = "pydantic"
 version = "2.7.1"
 description = "Data validation using Python type hints"
@@ -502,23 +499,23 @@ python-dotenv = ">=0.21.0"
 
 [[package]]
 name = "pytest"
-version = "8.1.1"
+version = "8.2.0"
 description = "pytest: simple powerful testing with Python"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "pytest-8.1.1-py3-none-any.whl", hash = "sha256:2a8386cfc11fa9d2c50ee7b2a57e7d898ef90470a7a34c4b949ff59662bb78b7"},
-    {file = "pytest-8.1.1.tar.gz", hash = "sha256:ac978141a75948948817d360297b7aae0fcb9d6ff6bc9ec6d514b85d5a65c044"},
+    {file = "pytest-8.2.0-py3-none-any.whl", hash = "sha256:1733f0620f6cda4095bbf0d9ff8022486e91892245bb9e7d5542c018f612f233"},
+    {file = "pytest-8.2.0.tar.gz", hash = "sha256:d507d4482197eac0ba2bae2e9babf0672eb333017bcedaa5fb1a3d42c1174b3f"},
 ]
 
 [package.dependencies]
 colorama = {version = "*", markers = "sys_platform == \"win32\""}
 iniconfig = "*"
 packaging = "*"
-pluggy = ">=1.4,<2.0"
+pluggy = ">=1.5,<2.0"
 
 [package.extras]
-testing = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "pygments (>=2.7.2)", "requests", "setuptools", "xmlschema"]
+dev = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "pygments (>=2.7.2)", "requests", "setuptools", "xmlschema"]
 
 [[package]]
 name = "pytest-asyncio"
@@ -551,7 +548,6 @@ files = [
 cli = ["click (>=5.0)"]
 
 [[package]]
-<<<<<<< HEAD
 name = "redis"
 version = "5.0.3"
 description = "Python client for Redis database and key-value store"
@@ -567,8 +563,6 @@ hiredis = ["hiredis (>=1.0.0)"]
 ocsp = ["cryptography (>=36.0.1)", "pyopenssl (==20.0.1)", "requests (>=2.26.0)"]
 
 [[package]]
-=======
->>>>>>> tests/roles
 name = "typing-extensions"
 version = "4.11.0"
 description = "Backported and Experimental Type Hints for Python 3.8+"
@@ -685,8 +679,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "3.12"
-<<<<<<< HEAD
 content-hash = "4a3fd2a301fa9262d94a38d6015b57385a7d36224c9d4d2dbf23a185808c665d"
-=======
-content-hash = "f9a933e4eb8926e6ca38e2c4a4798da357c8fd9498451024b17d91f35eb2124a"
->>>>>>> tests/roles
