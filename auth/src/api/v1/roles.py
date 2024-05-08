@@ -1,7 +1,7 @@
 from http import HTTPStatus
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, Path
+from fastapi import APIRouter, Body, Depends, Path, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.config import get_settings
@@ -26,6 +26,7 @@ router = APIRouter()
 async def get_all_roles(
     session: Annotated[AsyncSession, Depends(session_handler.create_session)],
     role_service: Annotated[RoleService, Depends(get_role_service)],
+    request_id: Annotated[str, Header(alias="X-Request-Id")] = "",
 ) -> list[RoleResponseSchema]:
     roles = await role_service.list(session=session)
     return roles
@@ -43,6 +44,7 @@ async def create_role(
     role: RoleCreateSchema = Body(
         description="Spectify 'title' and 'description' of new role"
     ),
+    request_id: Annotated[str, Header(alias="X-Request-Id")] = "",
 ) -> RoleResponseSchema:
     """Create a new role."""
     result = await role_service.create(session=session, role=role)
@@ -62,6 +64,7 @@ async def get_role(
         description="Role title. Letters and digits only. 3-50 characters long.",
         pattern=get_settings().ROLE_TITLE_PATTERN,
     ),
+    request_id: Annotated[str, Header(alias="X-Request-Id")] = "",
 ) -> RoleResponseSchema:
     """Get a role information."""
     role = RoleTitleSchema(title=role_title)
@@ -85,6 +88,7 @@ async def update_role(
     update_role_data: RoleUpdateSchema = Body(
         description="Spectify new values for field 'title' or(and) 'description'"
     ),
+    request_id: Annotated[str, Header(alias="X-Request-Id")] = "",
 ) -> RoleResponseSchema:
     """Update information about a role."""
     role_title_obj = RoleTitleSchema(title=role_title)
@@ -109,6 +113,7 @@ async def delete_role(
         description="Role title. Letters and digits only. 3-50 characters long.",
         pattern=get_settings().ROLE_TITLE_PATTERN,
     ),
+    request_id: Annotated[str, Header(alias="X-Request-Id")] = "",
 ) -> dict[str, str]:
     """Delete infromation about a role."""
     role_title_obj = RoleTitleSchema(title=role_title)
