@@ -1,14 +1,15 @@
 import contextlib
 
 import uvicorn
-from setup.tracer import configure_tracer
+from fastapi import FastAPI, Request, status
+from fastapi.params import Security
+from fastapi.responses import ORJSONResponse
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+
 from api.v1 import access, auth, personal, roles
 from core.config import get_settings
 from db.prepare_db import redis_shutdown, redis_startup
-from fastapi import FastAPI, Request, status
-from fastapi.responses import ORJSONResponse
-from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-from fastapi.params import Security
+from setup.tracer import configure_tracer
 from util.JWT_helper import token_check
 
 
@@ -54,13 +55,23 @@ app.include_router(
     dependencies=[Security(token_check, scopes=["auth_admin"])],
 )
 
-@app.middleware('http')
+
+@app.middleware("http")
 async def before_request(request: Request, call_next):
     response = await call_next(request)
-    request_id = request.headers.get('X-Request-Id')
+    request_id = request.headers.get("X-Request-Id")
+    if (
+        request.url
+        == f"{request.base_url}{get_settings().OPEN_API_DOCS_URL[1:]}"
+        or request.url
+        == f"{request.base_url}{get_settings().OPEN_API_URL[1:]}"
+    ):
+        return response
     if not request_id:
-        return ORJSONResponse(status_code=status.HTTP_400_BAD_REQUEST,
-                              content={'detail': 'X-Request-Id is required'})
+        return ORJSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"detail": "X-Request-Id is required"},
+        )
     return response
 
 
