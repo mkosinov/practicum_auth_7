@@ -1,6 +1,9 @@
+import re
 from http import HTTPStatus
 from typing import Annotated
 
+from core.config import get_settings
+from core.exceptions import InvalidUserOrPassword
 from db.postgres.session_handler import session_handler
 from fastapi import APIRouter, Body, Depends, Header, Query
 from fastapi.params import Security
@@ -9,7 +12,7 @@ from schemas.token import TokenCheckResponse, UserTokenPair
 from schemas.user import UserBase
 from services.auth_service import AuthService, get_auth_service
 from sqlalchemy.ext.asyncio import AsyncSession
-from util.JWT_helper import token_check
+from util.JWT_helper import strict_token_checker
 
 router = APIRouter()
 
@@ -27,6 +30,8 @@ async def login(
     user_agent: Annotated[str, Header()] = "",
     real_ip: Annotated[str, Header(alias="X-Real-IP")] = "",
 ) -> UserTokenPair:
+    if not re.match(get_settings().LOGIN_PATTERN, form_data.username):
+        raise InvalidUserOrPassword
     credentials = UserBase(
         login=form_data.username, password=form_data.password
     )
@@ -65,7 +70,9 @@ async def refresh(
 async def logout(
     session: Annotated[AsyncSession, Depends(session_handler.create_session)],
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
-    token_check_data: Annotated[TokenCheckResponse, Security(token_check)],
+    token_check_data: Annotated[
+        TokenCheckResponse, Security(strict_token_checker)
+    ],
     logout_everywhere: Annotated[bool, Query()] = False,
 ) -> dict[str, str]:
     """Logout the user from from service."""

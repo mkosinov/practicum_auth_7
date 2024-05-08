@@ -6,7 +6,7 @@ from core.config import get_settings
 from db.prepare_db import redis_shutdown, redis_startup
 from fastapi import FastAPI
 from fastapi.params import Security
-from util.JWT_helper import token_check
+from util.JWT_helper import strict_token_checker
 
 
 @contextlib.asynccontextmanager
@@ -44,13 +44,13 @@ app.include_router(
     roles.router,
     prefix=get_settings().URL_PREFIX + "/roles",
     tags=["Roles"],
-    dependencies=[Security(token_check, scopes=["auth_admin"])],
+    dependencies=[Security(strict_token_checker, scopes=["auth_admin"])],
 )
 app.include_router(
     access.router,
     prefix=get_settings().URL_PREFIX + "/access",
     tags=["Access"],
-    dependencies=[Security(token_check, scopes=["auth_admin"])],
+    dependencies=[Security(strict_token_checker, scopes=["auth_admin"])],
 )
 
 if __name__ == "__main__":

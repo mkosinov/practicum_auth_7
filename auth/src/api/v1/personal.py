@@ -1,16 +1,15 @@
 from http import HTTPStatus
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, Security
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from db.postgres.session_handler import session_handler
+from fastapi import APIRouter, Depends, Query, Security
 from schemas.pagination import PaginationData
 from schemas.token import TokenCheckResponse
 from schemas.user import UserLoginSchema, UserSelf, UserSelfResponse
 from schemas.user_history import UserHistoryResponseSchema
 from services.user_service import UserService, get_user_service
-from util.JWT_helper import token_check
+from sqlalchemy.ext.asyncio import AsyncSession
+from util.JWT_helper import strict_token_checker
 
 router = APIRouter()
 
@@ -40,7 +39,9 @@ async def create_user(
 async def get_current_user_data(
     user_service: Annotated[UserService, Depends(get_user_service)],
     session: Annotated[AsyncSession, Depends(session_handler.create_session)],
-    token_check_data: Annotated[TokenCheckResponse, Security(token_check)],
+    token_check_data: Annotated[
+        TokenCheckResponse, Security(strict_token_checker)
+    ],
 ) -> UserSelfResponse:
     """Get data about current user."""
     user_login = UserLoginSchema(login=token_check_data.sub)
@@ -56,7 +57,9 @@ async def get_current_user_data(
 async def update_user_data(
     user_service: Annotated[UserService, Depends(get_user_service)],
     session: Annotated[AsyncSession, Depends(session_handler.create_session)],
-    token_check_data: Annotated[TokenCheckResponse, Security(token_check)],
+    token_check_data: Annotated[
+        TokenCheckResponse, Security(strict_token_checker)
+    ],
     update_user_data: UserSelf,
 ) -> UserSelfResponse:
     """Change personal user information."""
@@ -71,7 +74,9 @@ async def update_user_data(
 async def delete_user_data(
     user_service: Annotated[UserService, Depends(get_user_service)],
     session: Annotated[AsyncSession, Depends(session_handler.create_session)],
-    token_check_data: Annotated[TokenCheckResponse, Security(token_check)],
+    token_check_data: Annotated[
+        TokenCheckResponse, Security(strict_token_checker)
+    ],
 ) -> dict[str, str]:
     """Delete personal information."""
     user_login = UserLoginSchema(login=token_check_data.sub)
@@ -87,7 +92,9 @@ async def delete_user_data(
 async def get_current_user_history(
     user_service: Annotated[UserService, Depends(get_user_service)],
     session: Annotated[AsyncSession, Depends(session_handler.create_session)],
-    token_check_data: Annotated[TokenCheckResponse, Security(token_check)],
+    token_check_data: Annotated[
+        TokenCheckResponse, Security(strict_token_checker)
+    ],
     page: Annotated[int, Query(description="Page number", ge=1)] = 1,
     size: Annotated[int, Query(description="Page size", ge=1)] = 1,
 ) -> list[UserHistoryResponseSchema]:

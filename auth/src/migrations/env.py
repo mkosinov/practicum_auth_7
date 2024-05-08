@@ -1,16 +1,16 @@
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import engine_from_config, pool
-
 from core.config import get_settings
 from db.postgres.session_handler import session_handler
 from models import device  # noqa: F401
+from models import oauth  # noqa: F401
 from models import role  # noqa: F401
 from models import token  # noqa: F401
 from models import user  # noqa: F401
 from models import user_history  # noqa: F401
 from models import user_role  # noqa: F401
+from sqlalchemy import engine_from_config, pool
 
 config = context.config
 

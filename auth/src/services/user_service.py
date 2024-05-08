@@ -5,12 +5,6 @@ from datetime import datetime
 from functools import lru_cache
 from typing import Annotated
 
-from fastapi import Depends
-from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
-
 from core.exceptions import (
     CreateSuperuserException,
     DBException,
@@ -19,18 +13,17 @@ from core.exceptions import (
     UserNotFoundException,
 )
 from db.postgres.postgres import PostgresStorage, get_postgers_storage
+from fastapi import Depends
 from models.device import DeviceModel
 from models.user import User
 from models.user_history import UserHistoryModel
 from schemas.pagination import PaginationData
-from schemas.user import (
-    UserInDB,
-    UserLoginSchema,
-    UserSaveToDB,
-    UserSelf,
-    UserSelfResponse,
-)
+from schemas.user import UserInDB, UserLoginSchema, UserSaveToDB, UserSelf
 from schemas.user_history import UserHistoryResponseSchema
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 from util.hash_helper import get_hasher
 
 
@@ -41,7 +34,7 @@ class UserService:
 
     async def create_user(
         self, session: AsyncSession, user: UserSelf
-    ) -> UserSelfResponse:
+    ) -> UserInDB:
         """Create user in the database."""
         if user.login == "superuser":
             raise CreateSuperuserException
@@ -117,7 +110,11 @@ class UserService:
     async def get_user_from_db(
         self, session: AsyncSession, user: UserLoginSchema
     ) -> UserInDB:
-        stmt = select(User).where(User.login == user.login)
+        stmt = (
+            select(User)
+            .where(User.login == user.login)
+            .options(joinedload(User.oauth_accounts))
+        )
         result = await self.database.execute(session=session, stmt=stmt)
         user_from_db = result.unique().scalars().first()
         if not user_from_db:

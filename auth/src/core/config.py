@@ -50,8 +50,11 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_LIFETIME: int = Field(default=14)
 
     # OAuth2.0
+    OAUTH_BASE_URL: str = Field()
     OAUTH_YANDEX_CLIENT_ID: str = Field()
     OAUTH_YANDEX_CLIENT_SECRET: str = Field()
+    OAUTH_VK_CLIENT_ID: str = Field()
+    OAUTH_VK_CLIENT_SECRET: str = Field()
 
     # Validation config
     ROLE_TITLE_MIN_LENGTH: int = 3
@@ -86,6 +89,7 @@ class Settings(BaseSettings):
             "auth_admin": "Admin to manage roles and access",
             "subscriber": "User who paid subscription",
         },
+        auto_error=False,
     )
 
     @property

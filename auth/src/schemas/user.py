@@ -1,23 +1,32 @@
 from uuid import UUID
-from pydantic import Field
+
 from core.config import get_settings
-
-from pydantic import BaseModel, ConfigDict, EmailStr
-
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, computed_field
 from schemas.mixins import CreatedMixinSchema
+from schemas.oauth import OAuthUserSchema
 
 
 class UserSelf(BaseModel):
-    login: str = Field(min_length=get_settings().LOGIN_MIN_LENGTH,
-                       max_length=get_settings().LOGIN_MAX_LENGTH)
-    email: EmailStr = Field(min_length=get_settings().EMAIL_MIN_LENGTH,
-                            max_length=get_settings().EMAIL_MAX_LENGTH)
-    first_name: str = Field(min_length=get_settings().FIRST_NAME_MIN_LENGTH,
-                            max_length=get_settings().FIRST_NAME_MAX_LENGTH)
-    last_name: str = Field(min_length=get_settings().LAST_NAME_MIN_LENGTH,
-                           max_length=get_settings().LAST_NAME_MAX_LENGTH)
-    password: str = Field(min_length=get_settings().PASSWORD_MIN_LENGTH,
-                          max_length=get_settings().PASSWORD_MAX_LENGTH)
+    login: str = Field(
+        min_length=get_settings().LOGIN_MIN_LENGTH,
+        max_length=get_settings().LOGIN_MAX_LENGTH,
+    )
+    email: EmailStr = Field(
+        min_length=get_settings().EMAIL_MIN_LENGTH,
+        max_length=get_settings().EMAIL_MAX_LENGTH,
+    )
+    first_name: str = Field(
+        min_length=get_settings().FIRST_NAME_MIN_LENGTH,
+        max_length=get_settings().FIRST_NAME_MAX_LENGTH,
+    )
+    last_name: str = Field(
+        min_length=get_settings().LAST_NAME_MIN_LENGTH,
+        max_length=get_settings().LAST_NAME_MAX_LENGTH,
+    )
+    password: str = Field(
+        min_length=get_settings().PASSWORD_MIN_LENGTH,
+        max_length=get_settings().PASSWORD_MAX_LENGTH,
+    )
 
 
 class UserInDB(CreatedMixinSchema):
@@ -30,6 +39,12 @@ class UserInDB(CreatedMixinSchema):
     last_name: str
     is_active: bool
     hashed_password: str
+    oauth_accounts: list[OAuthUserSchema] = []
+
+    @computed_field
+    @property
+    def oauth_accounts_compact(self) -> list[str]:
+        return [account.provider for account in self.oauth_accounts]
 
 
 class UserInDBAccess(UserInDB):
@@ -60,6 +75,7 @@ class UserSelfResponse(BaseModel):
     email: EmailStr
     first_name: str
     last_name: str
+    oauth_accounts_compact: list[str] = []
 
 
 class UserLoginSchema(BaseModel):
