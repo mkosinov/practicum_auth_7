@@ -29,6 +29,7 @@ async def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     user_agent: Annotated[str, Header()] = "",
     real_ip: Annotated[str, Header(alias="X-Real-IP")] = "",
+    request_id: Annotated[str, Header(alias="X-Request-Id")] = "",
 ) -> UserTokenPair:
     if not re.match(get_settings().LOGIN_PATTERN, form_data.username):
         raise InvalidUserOrPassword
@@ -54,6 +55,7 @@ async def refresh(
     session: Annotated[AsyncSession, Depends(session_handler.create_session)],
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
     refresh_token: Annotated[str, Body()],
+    request_id: Annotated[str, Header(alias="X-Request-Id")] = "",
 ) -> UserTokenPair:
     """Generates the new token pair and returns it to the user."""
     tokens = await auth_service.refresh(
@@ -74,6 +76,7 @@ async def logout(
         TokenCheckResponse, Security(strict_token_checker)
     ],
     logout_everywhere: Annotated[bool, Query()] = False,
+    request_id: Annotated[str, Header(alias="X-Request-Id")] = "",
 ) -> dict[str, str]:
     """Logout the user from from service."""
     await auth_service.logout(

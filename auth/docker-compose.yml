@@ -12,10 +12,10 @@ services:
       - postgres_auth_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -p $PG_PORT -U $PG_USER -d $PG_DB"]
-      interval: 10s
+      interval: 3s
       timeout: 1s
       retries: 10
-      start_period: 5s
+      start_period: 3s
     restart: always
     networks:
       movies_project_net:
@@ -28,10 +28,10 @@ services:
       -  $AUTH_REDIS_PORT
     healthcheck:
       test: ["CMD-SHELL", "redis-cli", "-p $AUTH_REDIS_PORT", "ping"]
-      interval: 10s
+      interval: 3s
       timeout: 1s
       retries: 5
-      start_period: 5s
+      start_period: 3s
     volumes:
       - redis_auth_data:/data
     restart: always
@@ -51,10 +51,10 @@ services:
       - fastapi_auth_log:/src/logs
     healthcheck:
       test: curl -s -f http://localhost:$AUTH_FASTAPI_PORT/auth/docs || exit 1
-      interval: 10s
+      interval: 3s
       timeout: 1s
       retries: 10
-      start_period: 5s      
+      start_period: 3s
     restart: always
     depends_on:
       auth.db:
@@ -62,7 +62,7 @@ services:
       auth.cache:
         condition: service_healthy
     networks:
-      movies_project_net:     
+      movies_project_net:
     command: bash -c "poetry run alembic upgrade head && gunicorn -w 4 -k uvicorn.workers.UvicornWorker -b :$AUTH_FASTAPI_PORT main:app"
 
   auth.proxy:
@@ -81,6 +81,18 @@ services:
     networks:
       movies_project_net:
 
+  auth.tracing:
+    container_name: auth.jaeger
+    image: jaegertracing/all-in-one:latest
+    env_file:
+    - .env
+    restart: always
+    ports:
+      - $JAEGER_UI_PORT:$JAEGER_UI_PORT
+    expose:
+      - $JAEGER_PORT
+    networks:
+      movies_project_net:
 
 volumes:
   postgres_auth_data:
