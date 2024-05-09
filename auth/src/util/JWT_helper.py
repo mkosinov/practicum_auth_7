@@ -5,13 +5,12 @@ from functools import lru_cache
 from typing import Annotated
 
 from argon2.exceptions import VerifyMismatchError
+from core.config import get_settings
+from core.exceptions import ExpireToken, UnAuthorizedException
 from Cryptodome.Hash import HMAC, SHA256
 from fastapi import Depends
 from fastapi.security import SecurityScopes
 from pydantic import BaseModel
-
-from core.config import get_settings
-from core.exceptions import ExpireToken, UnAuthorizedException
 from schemas.token import (
     AccessTokenPayload,
     RefreshTokenPayload,
@@ -82,38 +81,54 @@ def get_jwt_helper() -> JWTHelper:
     return JWTHelper()
 
 
-def token_check(
-    access_token: Annotated[str, Depends(get_settings().oauth2_scheme)],
-    jwthelper: Annotated[JWTHelper, Depends(get_jwt_helper)],
-    security_scopes: SecurityScopes,
-) -> TokenCheckResponse:
-    if security_scopes.scopes:
-        authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
-    else:
-        authenticate_value = "Bearer"
-    try:
-        jwthelper.verify_token(access_token)
-    except VerifyMismatchError:
-        raise UnAuthorizedException(
-            detail="Could not validate credentials",
-            authenticate_value=authenticate_value,
+class TokenChecker:
+    def __init__(self, auto_error: bool):
+        self.auto_error = auto_error
+
+    def __call__(
+        self,
+        access_token: Annotated[str, Depends(get_settings().oauth2_scheme)],
+        jwthelper: Annotated[JWTHelper, Depends(get_jwt_helper)],
+        security_scopes: SecurityScopes,
+    ) -> TokenCheckResponse:
+        if not access_token:
+            if self.auto_error:
+                raise UnAuthorizedException(detail="No access token provided")
+            else:
+                return None
+        if security_scopes.scopes:
+            authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
+        else:
+            authenticate_value = "Bearer"
+        try:
+            jwthelper.verify_token(access_token)
+        except VerifyMismatchError:
+            raise UnAuthorizedException(
+                detail="Could not validate credentials",
+                authenticate_value=authenticate_value,
+            )
+        token_payload = jwthelper.decode_payload(
+            access_token, token_schema=AccessTokenPayload
         )
-    token_payload = jwthelper.decode_payload(
-        access_token, token_schema=AccessTokenPayload
-    )
-    if not token_payload:
-        raise UnAuthorizedException(
-            detail="No payload in token",
-            authenticate_value=authenticate_value,
-        )
-    if token_payload.sub == "superuser":
+        if not token_payload:
+            raise UnAuthorizedException(
+                detail="No payload in token",
+                authenticate_value=authenticate_value,
+            )
+        if token_payload.sub == "superuser":
+            return TokenCheckResponse(
+                token=access_token, **token_payload.model_dump()
+            )
+        for scope in security_scopes.scopes:
+            if scope not in token_payload.roles:
+                raise UnAuthorizedException(
+                    detail="Not enough permissions",
+                    authenticate_value=authenticate_value,
+                )
         return TokenCheckResponse(
             token=access_token, **token_payload.model_dump()
         )
-    for scope in security_scopes.scopes:
-        if scope not in token_payload.roles:
-            raise UnAuthorizedException(
-                detail="Not enough permissions",
-                authenticate_value=authenticate_value,
-            )
-    return TokenCheckResponse(token=access_token, **token_payload.model_dump())
+
+
+silent_token_checker = TokenChecker(auto_error=False)
+strict_token_checker = TokenChecker(auto_error=True)

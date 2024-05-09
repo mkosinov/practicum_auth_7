@@ -1,5 +1,4 @@
 import binascii
-import re
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 from typing import Annotated
@@ -60,12 +59,11 @@ class AuthService:
         user: UserBase,
         user_agent: str,
         ip: str,
+        oauth_provider: str = "",
     ) -> UserTokenPair:
         """Creates the new session.
 
         If verification successed, service returns generated tokens."""
-        if not re.match(get_settings().LOGIN_PATTERN, user.login):
-            raise InvalidUserOrPassword
         try:
             user_from_db = await self._get_user_with_relations_from_db(
                 session=session, user_login=user.login
@@ -73,7 +71,10 @@ class AuthService:
             if not user_from_db:
                 raise InvalidUserOrPassword
             current_user = UserInDBAccess.model_validate(user_from_db)
-            get_hasher().verify(current_user.hashed_password, user.password)
+            if not oauth_provider:
+                get_hasher().verify(
+                    current_user.hashed_password, user.password
+                )
             current_user_roles = [
                 access.role.title for access in current_user.access
             ]
@@ -114,10 +115,13 @@ class AuthService:
         except VerifyMismatchError:
             raise InvalidUserOrPassword
 
+        action = "login"
+        if oauth_provider:
+            action = f"login via {oauth_provider}"
         user_history_obj = UserHistoryCreateSchema(
             user_id=current_user.id,
             device_id=UUID(str(device_in_db.id)),
-            action="login",
+            action=action,
             ip=ip,
         )
         await self.write_user_history(
@@ -256,6 +260,7 @@ class AuthService:
                 joinedload(self.user_table.devices).joinedload(
                     self.device_table.refresh_token
                 ),
+                joinedload(self.user_table.oauth_accounts),
             )
         )
         result = await self.database.execute(session=session, stmt=stmt)

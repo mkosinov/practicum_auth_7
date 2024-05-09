@@ -28,8 +28,8 @@ class User(session_handler.base):
     )
     first_name = Column(String(get_settings().FIRST_NAME_MAX_LENGTH))
     last_name = Column(String(get_settings().LAST_NAME_MAX_LENGTH))
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    modified_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=datetime.now(), nullable=False)
+    modified_at = Column(DateTime, default=datetime.now(), nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
     access = relationship(
         "UserRoleModel",
@@ -39,6 +39,9 @@ class User(session_handler.base):
     devices = relationship("DeviceModel", back_populates="user", uselist=True)
     history = relationship(
         "UserHistoryModel", back_populates="user", uselist=True
+    )
+    oauth_accounts = relationship(
+        "OAuthUserModel", back_populates="user", uselist=True
     )
 
     def __repr__(self) -> str:

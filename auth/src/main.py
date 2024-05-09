@@ -6,11 +6,11 @@ from fastapi.params import Security
 from fastapi.responses import ORJSONResponse
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
-from api.v1 import access, auth, personal, roles
+from api.v1 import access, auth, oauth, personal, roles
 from core.config import get_settings
 from db.prepare_db import redis_shutdown, redis_startup
 from setup.tracer import configure_tracer
-from util.JWT_helper import token_check
+from util.JWT_helper import strict_token_checker
 
 
 @contextlib.asynccontextmanager
@@ -38,6 +38,11 @@ app.include_router(
     tags=["Authentication service."],
 )
 app.include_router(
+    oauth.router,
+    prefix=get_settings().URL_PREFIX + "/oauth",
+    tags=["OAuth2.0 service."],
+)
+app.include_router(
     personal.router,
     prefix=get_settings().URL_PREFIX + "/profile",
     tags=["Personal account."],
@@ -46,13 +51,13 @@ app.include_router(
     roles.router,
     prefix=get_settings().URL_PREFIX + "/roles",
     tags=["Roles"],
-    dependencies=[Security(token_check, scopes=["auth_admin"])],
+    dependencies=[Security(strict_token_checker, scopes=["auth_admin"])],
 )
 app.include_router(
     access.router,
     prefix=get_settings().URL_PREFIX + "/access",
     tags=["Access"],
-    dependencies=[Security(token_check, scopes=["auth_admin"])],
+    dependencies=[Security(strict_token_checker, scopes=["auth_admin"])],
 )
 
 

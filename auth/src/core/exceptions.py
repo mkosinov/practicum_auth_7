@@ -126,3 +126,11 @@ class UpdateNoChangesException(HTTPException):
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="No changes found in update request",
         )
+
+
+class OauthAccountNotExistsException(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Oauth account not found",
+        )
