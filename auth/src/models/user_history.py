@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, ForeignKey, String, text, UniqueConstraint
+from sqlalchemy import Column, DateTime, ForeignKey, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -11,10 +11,10 @@ from db.postgres.session_handler import session_handler
 class UserHistoryModel(session_handler.base):
     __tablename__ = "user_history"
     __table_args__ = (
-        UniqueConstraint('id', 'action'),
+        UniqueConstraint("id", "action"),
         {
-            'postgresql_partition_by': 'LIST (action)',
-        }
+            "postgresql_partition_by": "LIST (action)",
+        },
     )
 
     id = Column(
@@ -26,7 +26,9 @@ class UserHistoryModel(session_handler.base):
     device_id = Column(
         UUID, ForeignKey("device.id", ondelete="SET NULL"), nullable=False
     )
-    action = Column(String(50), default="login", primary_key=True, nullable=False)
+    action = Column(
+        String(50), default="login", primary_key=True, nullable=False
+    )
     ip = Column(String(39), default="", nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
