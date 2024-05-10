@@ -1,7 +1,7 @@
 # Yandex Practicum. 7 sprint. Auth
 
 # Адрес репозитория:
-https://github.com/mkosinov/
+[https://github.com/mkosinov/practicum_auth_7](https://github.com/mkosinov/practicum_auth_7)
 
 # Авторы проекта:
 - Косинов Максим (https://github.com/mkosinov)
@@ -45,4 +45,4 @@ Admin panel - http://localhost:8002/admin/
 
 ### 4. Схема проекта:
 
-![Схема проекта](https://)
+![Схема проекта](https://github.com/mkosinov/practicum_auth_7/assets/65870327/cf9d9863-398f-408f-b09d-bd3ec0dc49da)
