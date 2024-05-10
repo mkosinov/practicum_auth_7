@@ -1,15 +1,20 @@
 from http import HTTPStatus
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, Query, Security
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from db.postgres.session_handler import session_handler
+from fastapi import APIRouter, Depends, Header, Query, Security
 from schemas.pagination import PaginationData
 from schemas.token import TokenCheckResponse
-from schemas.user import UserLoginSchema, UserSelf, UserSelfResponse
+from schemas.user import (
+    UserLoginSchema,
+    UserSelf,
+    UserSelfResponse,
+    UserSelfWRolesResponse,
+)
 from schemas.user_history import UserHistoryResponseSchema
+from services.access_service import AccessService, get_access_service
 from services.user_service import UserService, get_user_service
+from sqlalchemy.ext.asyncio import AsyncSession
 from util.JWT_helper import strict_token_checker
 
 router = APIRouter()
@@ -34,22 +39,26 @@ async def create_user(
 
 @router.get(
     "/personal",
-    response_model=UserSelfResponse,
+    response_model=UserSelfWRolesResponse,
     status_code=HTTPStatus.OK,
     description="Get personal user information.",
 )
 async def get_current_user_data(
     user_service: Annotated[UserService, Depends(get_user_service)],
+    access_service: Annotated[AccessService, Depends(get_access_service)],
     session: Annotated[AsyncSession, Depends(session_handler.create_session)],
     token_check_data: Annotated[
         TokenCheckResponse, Security(strict_token_checker)
     ],
     request_id: Annotated[str, Header(alias="X-Request-Id")] = "",
-) -> UserSelfResponse:
+) -> UserSelfWRolesResponse:
     """Get data about current user."""
     user_login = UserLoginSchema(login=token_check_data.sub)
     user = await user_service.get_user(session=session, user_login=user_login)
-    return UserSelfResponse(**user.model_dump())
+    user_roles = await access_service.get_user_roles(
+        session=session, user_login=user_login.login
+    )
+    return UserSelfWRolesResponse(roles=user_roles.roles, **user.model_dump())
 
 
 @router.patch(

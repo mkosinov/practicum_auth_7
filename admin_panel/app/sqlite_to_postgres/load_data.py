@@ -13,7 +13,6 @@ from transferDC import (
     PersonFilmWorkDC,
 )
 
-
 DSN = {
     "database": os.environ.get("POSTGRES_DB"),
     "user": os.environ.get("POSTGRES_USER"),
@@ -133,3 +132,4 @@ if __name__ == "__main__":
     ) as pg:
         with pg.conn:
             transfer_process(sq, pg, ordered_table_names, BATCH_SIZE)
+    print("Transfer movies from sqlite3 to postgres finished successfully")

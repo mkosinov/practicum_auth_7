@@ -3,16 +3,16 @@ import uuid
 from datetime import datetime
 
 import typer
-from rich import print
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.future import select
-
 from db.postgres.session_handler import session_handler
 from models.device import DeviceModel  # noqa
+from models.oauth import OAuthUserModel  # noqa
 from models.token import RefreshToken  # noqa
 from models.user import User  # noqa
 from models.user_history import UserHistoryModel  # noqa
 from models.user_role import UserRoleModel  # noqa
+from rich import print
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.future import select
 from util.hash_helper import get_hasher  # noqa
 
 typer_app = typer.Typer()
@@ -25,7 +25,7 @@ def create_supersuser(password: str):
     superuser = User(
         id=uuid.uuid4(),
         login="superuser",
-        email=str(uuid.uuid4()) + "@superuser.com",
+        email="superuser@superuser.com",
         hashed_password=hashed_password,
         first_name="superuser",
         last_name="superuser",

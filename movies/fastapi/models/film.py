@@ -18,3 +18,4 @@ class Film(FilmShort):
     actors: list[PersonShort] | None = []
     writers: list[PersonShort] | None = []
     directors: list[PersonShort] | None = []
+    subscribers_only: bool | None = False

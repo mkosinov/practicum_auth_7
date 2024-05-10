@@ -22,21 +22,27 @@ https://github.com/mkosinov/
 - Uvicorn
 - Pytest
 
-### 1. Запуск проекта в контейнерах Docker
+## Запуск проекта в контейнерах Docker
+В папках присуствуют docker-compose.yaml файлы каждого из сервисов + соответствующий env.example.
+/admin_panel
+/auth
+/movies
 
-#### 1. Создать .env файл из env.example (в корневой папке)
+Все проекты объединены общим docker-compose в корневой папке.
 
-#### 2. Запустить проект в корневой папке:
+### 1. Создать .env файлы из env.example (в папках сервисов)
+
+### 2. Запустить проект в корневой папке:
 ```bash
 docker compose up
 ```
 
-#### 3. API интерфейс доступен:
-Auth - http://localhost:8001/auth/docs/
+### 3. Адреса API интерфейсов по умолчанию:
+Auth - http://localhost/auth/docs/
 Movies - http://localhost:8000/api/openapi/
 Admin panel - http://localhost:8002/admin/
 
 
-#### 4. Схема проекта:
+### 4. Схема проекта:
 
 ![Схема проекта](https://)

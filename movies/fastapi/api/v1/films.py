@@ -1,8 +1,6 @@
 from http import HTTPStatus
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
-
 from core.config import settings
 from core.enum import (
     APICommonDescription,
@@ -12,8 +10,10 @@ from core.enum import (
     ErrorMessage,
 )
 from core.service import CommonService
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
 from models.film import Film, FilmShort
 from services.film import get_film_service
+from util.JWT_helper import security_jwt
 
 router = APIRouter()
 
@@ -72,16 +72,26 @@ async def film_details(
     request: Request,
     uuid: UUID = Path(description="uuid кинопроизведения"),
     service: CommonService = Depends(get_film_service),
+    token_payload=Depends(security_jwt),
 ) -> Film:
     """
     Выдает информацию из elasticsearch (или из кэша redis) о кинопроизведении
     по uuid кинопроизведения.
     """
-    film = await service.get_by_uuid(uuid=uuid, request=request)
+    film: Film = await service.get_by_uuid(uuid=uuid, request=request)
     if not film:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
             detail=ErrorMessage.film_not_found,
+        )
+    if (
+        film.subscribers_only
+        and ("subscriber" not in token_payload.roles)
+        and (token_payload.sub != "superuser")
+    ):
+        raise HTTPException(
+            status_code=HTTPStatus.PAYMENT_REQUIRED,
+            detail="This filmwork is for subscribers only",
         )
     return film
 

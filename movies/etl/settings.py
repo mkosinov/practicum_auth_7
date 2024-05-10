@@ -1,4 +1,5 @@
 """Настройки приложения postgres_to_es."""
+
 import os
 
 # Время между опросами изменений.
@@ -30,6 +31,7 @@ fw.rating AS imdb_rating,
 json_object_agg(DISTINCT g.id, g.name) AS genres,
 fw.title,
 fw.description,
+fw.subscribers_only,
 concat('[', string_agg(DISTINCT CASE WHEN pfw.role = 'actor' THEN
 json_build_object('uuid', p.id, 'full_name', p.full_name) #>> '{}' END, ','),
 ']') AS actors,
@@ -136,6 +138,7 @@ INDEX_MOVIES_MAPPINGS = {
             "fields": {"raw": {"type": "keyword"}},
         },
         "description": {"type": "text", "analyzer": "ru_en"},
+        "subscribers_only": {"type": "boolean"},
         "actors": {
             "type": "nested",
             "dynamic": "strict",
