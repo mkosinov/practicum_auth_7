@@ -1,6 +1,6 @@
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
-import uuid
 
 
 # эталонные датаклассы (DC) под схему в Postgres
@@ -17,12 +17,12 @@ class TimeStampModifiedDC:
 @dataclass(kw_only=True)
 class GenreDC(TimeStampCreatedDC, TimeStampModifiedDC):
     name: str
-    description: str = field(default='')
+    description: str = field(default="")
     id: uuid.UUID = field(default_factory=uuid.UUID)
 
     def __post_init__(self):
         if self.description is None:
-            self.description = ''
+            self.description = ""
 
 
 @dataclass(kw_only=True)
@@ -34,18 +34,21 @@ class PersonDC(TimeStampCreatedDC, TimeStampModifiedDC):
 @dataclass(kw_only=True)
 class FilmWorkDC(TimeStampCreatedDC, TimeStampModifiedDC):
     title: str
-    description: str = field(default='')
-    creation_date: str = field(default='')
+    description: str = field(default="")
+    creation_date: str = field(default="")
     rating: float = field(default=0.0)
-    type: str = field(default='mv')
+    type: str = field(default="mv")
     id: uuid.UUID = field(default_factory=uuid.UUID)
-    file_path: str = field(default='')
+    subscribers_only: bool = field(default=False)
+    file_path: str = field(default="")
 
     def __post_init__(self):
         if self.description is None:
-            self.description = ''
+            self.description = ""
         if self.rating is None:
             self.rating = 0
+        if self.rating > 8:
+            self.subscribers_only = True
 
 
 @dataclass(kw_only=True)

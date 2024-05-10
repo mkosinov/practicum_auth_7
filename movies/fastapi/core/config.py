@@ -30,5 +30,9 @@ class Settings(BaseSettings):
     OPEN_API_DOCS_URL: str = "/api/openapi"
     OPENAPI_URL: str = "/api/openapi.json"
 
+    # JWT
+    JWT_SECRET: str = Field(default="Secret encode token")
+    JWT_CODE: str = "utf-8"
+
 
 settings = Settings()

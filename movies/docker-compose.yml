@@ -3,7 +3,7 @@ name: movies
 services:
 
 
-  movies.elastic:
+  movies.db:
     container_name: movies.elastic
     image: elasticsearch:8.6.2
     environment:
@@ -32,13 +32,13 @@ services:
         hard: -1
     restart: always
     networks:
-      movies_project_net:    
+      movies_project_net:
 
   movies.cache:
     container_name: movies.redis
     image: redis:7.2.3-alpine3.19
     env_file:
-      - .env    
+      - .env
     expose:
       - $REDIS_PORT
     volumes:
@@ -49,12 +49,12 @@ services:
       interval: 10s
       timeout: 1s
       retries: 5
-      start_period: 5s      
+      start_period: 5s
     depends_on:
       movies.app:
-        condition: service_healthy    
+        condition: service_healthy
     networks:
-      movies_project_net:    
+      movies_project_net:
     command: redis-server --save 60 1 --loglevel notice
 
   movies.etl:
@@ -69,11 +69,11 @@ services:
     depends_on:
       admin.db:
         condition: service_healthy
-      movies.elastic:
+      movies.db:
         condition: service_healthy
     restart: always
     networks:
-      movies_project_net:    
+      movies_project_net:
 
 
   movies.app:
@@ -94,14 +94,14 @@ services:
       retries: 10
       start_period: 5s
     depends_on:
-      movies.elastic:
+      movies.db:
         condition: service_healthy
     restart: always
     networks:
-      movies_project_net:    
-    command: gunicorn -w 4 -k uvicorn.workers.UvicornWorker -b :$FASTAPI_PORT main:app
+      movies_project_net:
+    command: bash -c "gunicorn -w 4 -k uvicorn.workers.UvicornWorker -b :$FASTAPI_PORT main:app"
 
-  movies.nginx:
+  movies.proxy:
     container_name: movies.nginx
     image: nginx:1.25-bookworm
     ports:
@@ -115,7 +115,7 @@ services:
         condition: service_healthy
     restart: always
     networks:
-      movies_project_net:    
+      movies_project_net:
 
 volumes:
   etl_log:

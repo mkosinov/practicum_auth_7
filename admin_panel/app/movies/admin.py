@@ -1,8 +1,9 @@
-from django.contrib import admin
-from django.utils.translation import gettext_lazy as _
 import uuid
 
-from .models import Genre, FilmWork, GenreFilmWork, Person, PersonFilmWork
+from django.contrib import admin
+from django.utils.translation import gettext_lazy as _
+
+from .models import FilmWork, Genre, GenreFilmWork, Person, PersonFilmWork
 
 
 class GenreFilmWorkInline(admin.TabularInline):
@@ -80,10 +81,17 @@ class FilmWorkAdmin(admin.ModelAdmin):
     list_display = (
         "title",
         "type",
+        "subscribers_only",
         "creation_date",
         "rating",
     )
-    list_filter = ("type", RatingFilter, GenreFilter, "creation_date")
+    list_filter = (
+        "subscribers_only",
+        "type",
+        RatingFilter,
+        GenreFilter,
+        "creation_date",
+    )
     search_fields = (
         "title",
         "description",

@@ -15,7 +15,7 @@ services:
       interval: 3s
       timeout: 1s
       retries: 10
-      start_period: 3s
+      start_period: 10s
     restart: always
     networks:
       movies_project_net:
@@ -31,7 +31,7 @@ services:
       interval: 3s
       timeout: 1s
       retries: 5
-      start_period: 3s
+      start_period: 10s
     volumes:
       - redis_auth_data:/data
     restart: always
@@ -54,7 +54,7 @@ services:
       interval: 3s
       timeout: 1s
       retries: 10
-      start_period: 3s
+      start_period: 10s
     restart: always
     depends_on:
       auth.db:
@@ -63,7 +63,7 @@ services:
         condition: service_healthy
     networks:
       movies_project_net:
-    command: bash -c "poetry run alembic upgrade head && gunicorn -w 4 -k uvicorn.workers.UvicornWorker -b :$AUTH_FASTAPI_PORT main:app"
+    command: bash -c "poetry run alembic upgrade head; poetry run python superuser_cli.py $SUPERUSER_PASSWORD; gunicorn -w 4 -k uvicorn.workers.UvicornWorker -b :$AUTH_FASTAPI_PORT main:app"
 
   auth.proxy:
     container_name: auth.nginx

@@ -87,6 +87,7 @@ class Filmwork(Base):
     genre: list[GenreShort] | None = []
     title: str | None
     description: str | None
+    subscribers_only: bool | None = False
     actors: list[PersonShort] | None = []
     writers: list[PersonShort] | None = []
     directors: list[PersonShort] | None = []
@@ -129,6 +130,7 @@ class Filmwork(Base):
             genres_data,
             title,
             description,
+            subscribers_only,
             actors_data,
             writers_data,
             directors_data,
@@ -140,6 +142,7 @@ class Filmwork(Base):
             genre=cls._deserialize_genres_dict(genres_data),
             title=title,
             description=description,
+            subscribers_only=subscribers_only,
             actors=cls._deserialize_person_list(json.loads(actors_data)),
             writers=cls._deserialize_person_list(json.loads(writers_data)),
             directors=cls._deserialize_person_list(json.loads(directors_data)),

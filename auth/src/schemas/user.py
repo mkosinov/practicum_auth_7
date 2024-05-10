@@ -78,5 +78,9 @@ class UserSelfResponse(BaseModel):
     oauth_accounts_compact: list[str] = []
 
 
+class UserSelfWRolesResponse(UserSelfResponse):
+    roles: list[str]
+
+
 class UserLoginSchema(BaseModel):
     login: str
